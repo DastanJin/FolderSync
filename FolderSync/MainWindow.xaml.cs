@@ -1,9 +1,12 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,23 +26,28 @@ namespace FolderSync
   /// </summary>
   public partial class MainWindow : Window
   {
-    public MainWindow() {
+    private SynchronizationManager manager { get; set; }
+    public MainWindow()
+    {
       InitializeComponent();
       LabelFromPath.Content = Properties.Settings.Default.FromPath;
       LabelToPath.Content = Properties.Settings.Default.ToPath;
+      manager = new SynchronizationManager();
     }
 
-    private void LabelFromPath_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+    private void LabelFromPath_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
       string dir = ShowPathDialog();
       if (!string.IsNullOrEmpty(dir))
       {
-        LabelToPath.Content = dir;
+        LabelFromPath.Content = dir;
         Properties.Settings.Default.FromPath = dir;
       }
       Properties.Settings.Default.Save();
     }
 
-    private void LabelToPath_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+    private void LabelToPath_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
       string dir = ShowPathDialog();
       if (!string.IsNullOrEmpty(dir))
       {
@@ -48,7 +56,8 @@ namespace FolderSync
       }
       Properties.Settings.Default.Save();
     }
-    private string ShowPathDialog() {
+    private string ShowPathDialog()
+    {
       var dialog = new CommonOpenFileDialog();
       dialog.IsFolderPicker = true;
       dialog.ShowHiddenItems = true;
@@ -59,43 +68,28 @@ namespace FolderSync
       return string.Empty;
 
     }
-    public static void Sync(string dirFrom, string dirTo) {
-      var result1 = GetFiles(dirFrom);
-      var result2 = GetFiles(dirTo);
+    public async void Sync(string dirFrom, string dirTo)
+    {
+      try
+      {
+        manager.loading.Show();
+        await Task.Run(async() => await manager.StartSynchronization(dirFrom,dirTo)).ContinueWith(task =>
+        {
+          manager.loading.Hide();
+        }, System.Threading.CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+        MessageBox.Show("Done");
+      }
+      catch (Exception ex)
+      {
+        MessageBox.Show(ex.Message);
+      }
+      finally {
+        manager.loading.Hide();
+      }
 
-      var dirsToRemove = result2.dirs.Where(x => !result1.dirs.Contains(x));
-      var filesToRemove = result2.files.Where(x => !result1.files.Contains(x));
-      var filesToAdd = result1.files.Where(x => !result2.files.Contains(x));
-      // sync
-      foreach (var fileToRemove in filesToRemove) 
-        Console.WriteLine("Deleting : " + Path.Combine(dirTo, fileToRemove.file));
-
-      foreach (var dirToRemove in dirsToRemove)
-        Console.WriteLine("Deleting : " + Path.Combine(dirTo, dirToRemove));
-
-      foreach (var fileToAdd in filesToAdd)
-        Console.WriteLine("Adding : " + Path.Combine(dirTo, fileToAdd.file));
     }
-    public static (HashSet<string> dirs, HashSet<(string file, long tick)> files) GetFiles(string dir) {
-
-      string CleanPath(string path) => path.Substring(dir.Length).TrimStart('/', '\\');
-
-      // replace this with a hashing method if you need
-      long GetUnique(string path) => new FileInfo(path).LastWriteTime.Ticks;
-
-      var directories = Directory.GetDirectories(dir, "*.*", SearchOption.AllDirectories);
-
-      var dirHash = directories.Select(CleanPath).ToHashSet();
-
-      // this could be paralleled if need be (if using a hash) 
-      var fileHash = directories.SelectMany(Directory.EnumerateFiles)
-         .Select(file => (name: CleanPath(file), ticks: GetUnique(file)))
-         .ToHashSet();
-
-      return (dirHash, fileHash);
-    }
-
-    private void ButtonSync_Click(object sender, RoutedEventArgs e) {
+    private void ButtonSync_Click(object sender, RoutedEventArgs e)
+    {
       try
       {
         Sync(Properties.Settings.Default.FromPath, Properties.Settings.Default.ToPath);

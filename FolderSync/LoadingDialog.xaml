@@ -1,0 +1,8 @@
+﻿<Window x:Class="FolderSync.LoadingDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Syncing..." Height="100" Width="400">
+    <Grid Margin="20">
+        <ProgressBar Minimum="0" Maximum="100" Name="pbStatus" />
+    </Grid>
+</Window>
