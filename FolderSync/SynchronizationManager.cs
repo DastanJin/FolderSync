@@ -87,6 +87,5 @@ namespace FolderSync
       double result = (double)counter / count * 100;
       return (int)Math.Round(result, 0);
     }
-
   }
 }
