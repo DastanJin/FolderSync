@@ -6,9 +6,11 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>sync.ico</ApplicationIcon>
+    <CodeAnalysisRuleSet>..\.sonarlint\dastanjin_foldersync_ayp5zrmxwg3yb9ge3t-2csharp.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="..\.sonarlint\dastanjin_foldersync_ayp5zrmxwg3yb9ge3t-2\CSharp\SonarLint.xml" Link="SonarLint.xml" />
     <Content Include="sync.ico" />
   </ItemGroup>
 

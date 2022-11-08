@@ -56,11 +56,12 @@ namespace FolderSync
       }
       Properties.Settings.Default.Save();
     }
-    private string ShowPathDialog()
+    private static string ShowPathDialog()
     {
-      var dialog = new CommonOpenFileDialog();
-      dialog.IsFolderPicker = true;
-      dialog.ShowHiddenItems = true;
+      var dialog = new CommonOpenFileDialog {
+        IsFolderPicker = true,
+        ShowHiddenItems = true
+      };
       if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
       {
         return dialog.FileName;

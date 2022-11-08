@@ -10,14 +10,14 @@ namespace FolderSync
 {
   public class SynchronizationManager
   {
-    public LoadingDialog loading;
+    public readonly LoadingDialog loading;
     public SynchronizationManager() {
       loading = new LoadingDialog();
     }
     public (HashSet<string> dirs, HashSet<(string file, long tick)> files) GetFiles(string dir)
     {
 
-      string CleanPath(string path) => path.Substring(dir.Length).TrimStart('/', '\\');
+      string CleanPath(string path) => path[dir.Length..].TrimStart('/', '\\');
 
       // replace this with a hashing method if you need
       long GetUnique(string path) => new FileInfo(path).LastWriteTime.Ticks;
@@ -37,10 +37,10 @@ namespace FolderSync
     {
 
       var result1 = GetFiles(dirFrom);
-      var result2 = GetFiles(dirTo);
+      var (dirs, files) = GetFiles(dirTo);
 
-      var filesToAdd = result1.files.Where(x => !result2.files.Contains(x));
-      var dirsToAdd = result1.dirs.Where(x => !result2.dirs.Contains(x));
+      var filesToAdd = result1.files.Where(x => !files.Contains(x));
+      var dirsToAdd = result1.dirs.Where(x => !dirs.Contains(x));
 
       int counter = 0;
       int count = filesToAdd.Count() + dirsToAdd.Count();
@@ -52,21 +52,21 @@ namespace FolderSync
         loading.Dispatcher.Invoke(new Action(() => loading.SetStatusPercent(GetPercent(counter, count))));
       }
 
-      foreach (var dir in filesToAdd)
+      foreach (var (file, tick) in filesToAdd)
       {
         counter++;
-        string oldFileDir = Path.Combine(dirFrom, dir.file);
-        string newFileDir = Path.Combine(dirTo, dir.file);
+        string oldFileDir = Path.Combine(dirFrom, file);
+        string newFileDir = Path.Combine(dirTo, file);
         await CompareAndCopy(oldFileDir, newFileDir);
         loading.Dispatcher.Invoke(new Action(() => loading.SetStatusPercent(GetPercent(counter, count))));
       }
     }
-    public Task CompareAndCopy(string firstFileDir, string secondFileDir)
+    public static Task CompareAndCopy(string firstFileDir, string secondFileDir)
     {
       if (File.Exists(firstFileDir))
       {
-        FileInfo oldFile = new FileInfo(secondFileDir);
-        FileInfo newFile = new FileInfo(firstFileDir);
+        FileInfo oldFile = new(secondFileDir);
+        FileInfo newFile = new(firstFileDir);
         if (oldFile.LastAccessTime > newFile.LastAccessTime)
         {
           File.Copy(secondFileDir, firstFileDir, true);

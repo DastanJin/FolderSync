@@ -1,0 +1,12 @@
+{
+  "ServerUri": "http://192.168.88.13:9000/",
+  "Organization": null,
+  "ProjectKey": "DastanJin_FolderSync_AYP5zrMxWg3yB9Ge3t-2",
+  "ProjectName": "FolderSync",
+  "Profiles": {
+    "CSharp": {
+      "ProfileKey": "AYP2mhyoZydG_cPctPQu",
+      "ProfileTimestamp": "2022-10-20T18:13:58Z"
+    }
+  }
+}
